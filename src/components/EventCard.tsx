@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../services/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 interface Event {
   title: string;
