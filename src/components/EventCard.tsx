@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 interface Event {
   title: string;
   date: { start_date: string; end_date?: string } | string;
@@ -87,7 +89,7 @@ const EventCard = ({ event }: { event: Event }) => {
         {isSignedUp && (
           <button
             onClick={() => {
-            window.location.href = "http://localhost:3000/api/auth/google";
+            window.location.href = `${API_BASE_URL}/api/auth/google`;
           }}
           className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-center mt-2"
           >
