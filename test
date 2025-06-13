@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMe, logout as authLogout } from '../api/auth';
+import { getMe, logout } from '../api/auth';
 import { fetchEvents, deleteEvent } from '../api/events';
 import CreateEventForm from '../components/CreateEventForm';
 import EditEventForm from '../components/EditEventForm';
@@ -21,10 +21,9 @@ export default function StaffDashboard() {
     }
 
     getMe(token)
-      .then(() => loadEvents())
+      .then(loadEvents)
       .catch(() => navigate('/staff-login'));
   }, [navigate]);
-
 
   const loadEvents = async () => {
     setLoading(true);
@@ -33,7 +32,7 @@ export default function StaffDashboard() {
       const evs = await fetchEvents();
       setEvents(evs);
     } catch (err: unknown) {
-      console.error('Failed to fetch events:', err);
+      console.error('Error loading events:', err);
       setError('Failed to load events');
     } finally {
       setLoading(false);
@@ -46,14 +45,15 @@ export default function StaffDashboard() {
     try {
       await deleteEvent(token, id);
       loadEvents();
-    } catch (err) {
-      console.error('Failed to delete event:', err);
-      alert('Delete failed');
+      setEditingId(null);
+    } catch (err: unknown) {
+      console.error('Error deleting event:', err);
+      alert(err instanceof Error ? err.message : 'Delete failed');
     }
   };
 
   const handleLogout = () => {
-    authLogout();
+    logout();
     navigate('/staff-login');
   };
 
@@ -84,7 +84,7 @@ export default function StaffDashboard() {
 
       <h2 className="text-xl font-semibold mb-2">Current Events</h2>
       <ul className="space-y-4">
-      {events.map(ev => (
+        {events.map(ev => (
           <li key={ev.id} className="border p-4 bg-white rounded">
             {editingId === ev.id ? (
               <EditEventForm
@@ -124,4 +124,4 @@ export default function StaffDashboard() {
       </ul>
     </div>
   );
-};
+}
