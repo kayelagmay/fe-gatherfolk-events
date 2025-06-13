@@ -1,97 +1,79 @@
-import React, { useEffect, useState } from "react";
-import { API_BASE_URL } from "../services/api";
+import React, { useState } from 'react';
+import { Event } from '../types';
+import { useNavigate } from 'react-router-dom';
 
-interface Event {
-  title: string;
-  date: { start_date: string; end_date?: string } | string;
-  venue?: { name: string };
-  description?: string;
-  link?: string;
+interface Props {
+  event: Event;
 }
 
-const formatDate = (startDate: string): string => {
-  const thisYear = new Date().getFullYear();
-  const fullDateString = `${startDate} ${thisYear}`;
-  const date = new Date(fullDateString);
+const EventCard: React.FC<Props> = ({ event }) => {
+  const navigate = useNavigate();
+  const { id, title, start_date, description, venue } = event;
+  const [downloaded, setDownloaded] = useState(false);
 
-  return date.toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
+  const signedList = (JSON.parse(
+    localStorage.getItem('signedUpEvents') || '[]'
+  ) as number[]);
+  const isSignedUp = id !== undefined && signedList.includes(id);
+
+  const formattedDate = new Date(start_date).toLocaleDateString('en-GB', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
-};
 
-const EventCard = ({ event }: { event: Event }) => {
-  const [isSignedUp, setIsSignedUp] = useState(false);
-
-  // Check if already signed up (from localStorage)
-  useEffect(() => {
-    const signedUpEvents = JSON.parse(localStorage.getItem("signedUpEvents") || "[]");
-    if (signedUpEvents.includes(event.title)) {
-      setIsSignedUp(true);
-    }
-  }, [event.title]);
-
-  // Handle Sign Up click
-  const handleSignUp = () => {
-    const signedUpEvents = JSON.parse(localStorage.getItem("signedUpEvents") || "[]");
-    if (!signedUpEvents.includes(event.title)) {
-      signedUpEvents.push(event.title);
-      localStorage.setItem("signedUpEvents", JSON.stringify(signedUpEvents));
-      setIsSignedUp(true);
-    }
+  const handleCalendarDownload = () => {
+    if (id === undefined) return;
+    const url = `${import.meta.env.VITE_API_URL}/api/calendar/${id}/download`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `event-${id}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setDownloaded(true);
   };
 
   return (
     <div className="bg-white shadow-md hover:shadow-xl transition duration-300 rounded-lg p-6 flex flex-col justify-between border border-gray-300">
-      <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
-      <p className="text-gray-600 mb-1">
-        {typeof event.date === "string"
-          ? event.date
-          : formatDate(event.date.start_date)}
-      </p>
-      {event.venue?.name && (
-        <p className="text-gray-700 mb-2">Venue: {event.venue.name}</p>
-      )}
-      {event.description && (
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className="text-gray-600 mb-1">{formattedDate}</p>
+      {venue && <p className="text-gray-700 mb-2">Venue: {venue}</p>}
+      {description && (
         <p className="text-gray-500 text-sm mb-4">
-          {event.description.length > 150
-            ? `${event.description.slice(0, 150)}...`
-            : event.description}
+          {description.length > 200 ? `${description.slice(0, 200)}…` : description}
         </p>
       )}
-      <div className="flex flex-col space-y-2 mt-auto">
-        {event.link && (
-          <a
-            href={event.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-center"
-          >
-            More Info
-          </a>
-        )}
 
+      <div className="flex flex-col space-y-2 mt-auto">
         {!isSignedUp ? (
           <button
-            onClick={handleSignUp}
-            className="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-center"
+            onClick={() => navigate(`/signup/${id}`)}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
           >
             Sign Up
           </button>
         ) : (
           <>
-            <div className="inline-block bg-gray-300 text-gray-700 px-4 py-2 rounded text-center">
-              Signed Up! 🎉
-            </div>
             <button
-              onClick={() =>
-                window.location.href = `${API_BASE_URL}/api/auth/google`
-              }
-              className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-center"
+              disabled
+              className="bg-gray-500 text-white px-4 py-2 rounded cursor-not-allowed"
             >
-              Add to Google Calendar
+              Signed up!
+            </button>
+            <button
+              onClick={handleCalendarDownload}
+              disabled={downloaded}
+              className={`px-4 py-2 rounded transition ${
+                downloaded
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {downloaded ? 'Downloaded!' : 'Add to Calendar'}
             </button>
           </>
         )}

@@ -1,24 +1,20 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import EventsList from "./components/EventsList";
-import CalendarSuccess from "./pages/CalendarSuccess";
+import Home from "./pages/Home";
 import StaffLogin from "./pages/StaffLogin";
 import StaffDashboard from "./pages/StaffDashboard";
+import Navbar from "./components/Navbar";
+import SignupForm from './pages/SignupForm';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-100 py-10">
-        <h1 className="text-4xl font-bold text-center text-blue-700 mb-8">
-          GatherFolk Events
-        </h1>
-
+      <Navbar />
         <Routes>
-          <Route path="/" element={<EventsList />} />
-          <Route path="/calendar-success" element={<CalendarSuccess />} />
+          <Route path="/" element={<Home />} />
           <Route path="/staff-login" element={<StaffLogin />} />
           <Route path="/staff-dashboard" element={<StaffDashboard />} />
+          <Route path="/signup/:id" element={<SignupForm />} />
         </Routes>
-      </div>
     </Router>
   );
 }
